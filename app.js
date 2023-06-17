@@ -57,7 +57,6 @@ app.get('/getDrivers', (req, res) => {
     })
 })
 
-
 // get vehicles
 app.get('/getVehicles', (req, res) => {
     const sql = "SELECT * FROM vehicles";
@@ -93,7 +92,7 @@ app.get('/getSite', (req, res) => {
     })
 })
 
-// get Workdone
+// get Work done
 app.get('/getWorkDone', (req, res) => {
     const sql = "SELECT * FROM workdone";
     db.query(sql, (err, data) => {
@@ -105,7 +104,7 @@ app.get('/getWorkDone', (req, res) => {
     })
 })
 
-// get driverssalary
+// get drivers salary
 app.get('/getDriversSalary', (req, res) => {
     const sql = "SELECT * FROM driverssalary";
     db.query(sql, (err, data) => {
@@ -117,8 +116,8 @@ app.get('/getDriversSalary', (req, res) => {
     })
 })
 
-// get driverssalary
-app.get('/dieselpurchase', (req, res) => {
+// get diesel purchase
+app.get('/getDieselPurchase', (req, res) => {
     const sql = "SELECT * FROM dieselpurchase";
     db.query(sql, (err, data) => {
         if (err) {
@@ -128,6 +127,36 @@ app.get('/dieselpurchase', (req, res) => {
         return res.json(data)
     })
 })
+
+
+// get site payment
+app.get('/getSitePayment', (req, res) => {
+    const sql = "SELECT * FROM sitepayment";
+    db.query(sql, (err, data) => {
+        if (err) {
+            return res.json(err)
+        }
+        console.log(data)
+        return res.json(data)
+    })
+})
+
+
+
+// get all payments
+app.get('/getAllPayment', (req, res) => {
+    const sql = "SELECT * FROM payments";
+    db.query(sql, (err, data) => {
+        if (err) {
+            return res.json(err)
+        }
+        console.log(data)
+        return res.json(data)
+    })
+})
+
+
+
 
 
 // Write data
@@ -549,6 +578,57 @@ app.post('/deleteFuelPurchase/:iddieselPurchase', (req, res) => {
         });
     });
 });
+
+
+// deleteFuelPurchase
+app.post('/deleteSitePayment/:iddieselPurchase', (req, res) => {
+    const iddieselPurchase = req.params.iddieselPurchase;
+    const updateStockSql = "UPDATE stockdiesel SET stock = stock - (SELECT Quantity FROM dieselpurchase WHERE iddieselPurchase = ?) WHERE idstockDiesel = ?";
+    const deletePaymentsSql = "DELETE FROM payments WHERE uid = (SELECT uid FROM dieselpurchase WHERE iddieselPurchase = ?)";
+    const deleteDieselPurchaseSql = "DELETE FROM dieselpurchase WHERE iddieselPurchase = ?";
+
+    db.beginTransaction((err) => {
+        if (err) {
+            return res.json('error ' + err);
+        }
+
+        db.query(updateStockSql, [iddieselPurchase, stockDieselId], (err, updateResult) => {
+            if (err) {
+                db.rollback(() => {
+                    return res.json('error ' + err);
+                });
+            }
+
+            db.query(deletePaymentsSql, [iddieselPurchase], (err, deletePaymentsResult) => {
+                if (err) {
+                    db.rollback(() => {
+                        return res.json('error ' + err);
+                    });
+                }
+
+                db.query(deleteDieselPurchaseSql, [iddieselPurchase], (err, deleteDieselPurchaseResult) => {
+                    if (err) {
+                        db.rollback(() => {
+                            return res.json('error ' + err);
+                        });
+                    }
+
+                    db.commit((err) => {
+                        if (err) {
+                            db.rollback(() => {
+                                return res.json('error ' + err);
+                            });
+                        }
+
+                        return res.json('Fuel purchase and related data successfully deleted');
+                    });
+                });
+            });
+        });
+    });
+});
+
+
 
 
 app.listen(8081, () => {
