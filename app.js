@@ -14,6 +14,7 @@ const db = mysql.createConnection({
 })
 db.connect();
 
+// login
 app.post('/login', (req, res) => {
     const sql = 'SELECT * FROM user WHERE email = ? AND password = ?'
 
@@ -51,7 +52,7 @@ app.get('/getDrivers', (req, res) => {
         if (err) {
             return res.json("error 1 " + err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
@@ -69,7 +70,6 @@ app.get('/getVehicles', (req, res) => {
     })
 })
 
-
 // get stock diesel
 app.get('/getStockDiesel', (req, res) => {
     const sql = "SELECT * FROM stockdiesel";
@@ -78,7 +78,6 @@ app.get('/getStockDiesel', (req, res) => {
             return res.json("error 1 " + err)
         }
         return res.json(data)
-        console.log('valuesss '+ data)
     })
 })
 
@@ -88,6 +87,42 @@ app.get('/getSite', (req, res) => {
     db.query(sql, (err, data) => {
         if (err) {
             return res.json("error 1 " + err)
+        }
+        console.log(data)
+        return res.json(data)
+    })
+})
+
+// get Workdone
+app.get('/getWorkDone', (req, res) => {
+    const sql = "SELECT * FROM workdone";
+    db.query(sql, (err, data) => {
+        if (err) {
+            return res.json(err)
+        }
+        console.log(data)
+        return res.json(data)
+    })
+})
+
+// get driverssalary
+app.get('/getDriversSalary', (req, res) => {
+    const sql = "SELECT * FROM driverssalary";
+    db.query(sql, (err, data) => {
+        if (err) {
+            return res.json(err)
+        }
+        console.log(data)
+        return res.json(data)
+    })
+})
+
+// get driverssalary
+app.get('/dieselpurchase', (req, res) => {
+    const sql = "SELECT * FROM dieselpurchase";
+    db.query(sql, (err, data) => {
+        if (err) {
+            return res.json(err)
         }
         console.log(data)
         return res.json(data)
@@ -120,33 +155,6 @@ app.post('/addSite', (req, res) => {
     })
 })
 
-// add work done
-// app.post('/addWorkDone', (req, res) => {
-//     const sql = "Insert into workdone ( `VehicleNumber`,`DriverName`,`SiteName`,`WorkDate`,`StartTime`,`EndTime`,`WorkingStatus`,`Remark`,`DieselConsumption`,`RatePerHour`,`TotalPayableHours`,`AmountToPay` ) values (?)";
-//     const values = [
-//         req.body.VehicleNumber,
-//         req.body.DriverName,
-//         req.body.SiteName,
-//         req.body.WorkDate,
-//         req.body.StartTime,
-//         req.body.EndTime,
-//         req.body.WorkingStatus,
-//         req.body.Remark,
-//         req.body.DieselConsumption,
-//         req.body.RatePerHour,
-//         req.body.TotalPayableHours,
-//         req.body.AmountToPay,
-//     ]
-//     console.log(values)
-//     // console.log(req.body)
-//     db.query(sql, [values], (err, data) => {
-//         if (err) {
-//             return res.json('error ' + err)
-//         }
-//         return res.json(data)
-//     })
-// })
-
 app.post('/addWorkDone', (req, res) => {
     const insertSql = "Insert into workdone ( `VehicleNumber`,`DriverName`,`SiteName`,`WorkDate`,`StartTime`,`EndTime`,`WorkingStatus`,`Remark`,`DieselConsumption`,`RatePerHour`,`TotalPayableHours`,`AmountToPay` ) values (?)";
     const updateSql = "UPDATE stockdiesel SET stock = stock - ? WHERE idstockDiesel = ?";
@@ -174,14 +182,14 @@ app.post('/addWorkDone', (req, res) => {
             return res.json('error ' + err);
         }
 
-        db.query(insertSql, [values], (err, insertResult) => {
+        db.query(insertSql, [values], (err) => {
             if (err) {
                 db.rollback(() => {
                     return res.json('error ' + err);
                 });
             }
 
-            db.query(updateSql, [quantity, idStockDiesel], (err, updateResult) => {
+            db.query(updateSql, [quantity, idStockDiesel], (err) => {
                 if (err) {
                     db.rollback(() => {
                         return res.json('error ' + err);
@@ -202,58 +210,7 @@ app.post('/addWorkDone', (req, res) => {
     });
 })
 
-// fuelPurchase
-
-app.post('/fuelPurchase', (req, res) => {
-    const insertSql = "INSERT INTO dieselpurchase (`date`, `PumpName`, `PumpAddress`, `Remark`, `Rate`, `Quantity`, `Total`, `uid`) VALUES (?)";
-    const updateSql = "UPDATE stockdiesel SET stock = stock + ? WHERE idstockDiesel = ?";
-    const values = [
-        req.body.date,
-        req.body.PumpName,
-        req.body.PumpAddress,
-        req.body.Remark,
-        req.body.Rate,
-        req.body.Quantity,
-        req.body.Total,
-        req.body.uid,
-    ];
-    const quantity = req.body.Quantity;
-    const idStockDiesel = 1; // Replace with the appropriate value for your use case
-
-    db.beginTransaction((err) => {
-        if (err) {
-            return res.json('error ' + err);
-        }
-
-        db.query(insertSql, [values], (err, insertResult) => {
-            if (err) {
-                db.rollback(() => {
-                    return res.json('error ' + err);
-                });
-            }
-
-            db.query(updateSql, [quantity, idStockDiesel], (err, updateResult) => {
-                if (err) {
-                    db.rollback(() => {
-                        return res.json('error ' + err);
-                    });
-                }
-
-                db.commit((err) => {
-                    if (err) {
-                        db.rollback(() => {
-                            return res.json('error ' + err);
-                        });
-                    }
-
-                    return res.json('Fuel purchase successfully recorded');
-                });
-            });
-        });
-    });
-});
-
-// fuelPurchase
+// addDriver
 app.post('/addDriver', (req, res) => {
     const sql = "Insert into drivers (`DriverName`,`DriverContact`,`DriverAddress`,`AadharCard`,`DrivingLicense`,`JoinDate`,`RatePerHour`,`Remark`) values (?)";
     const values = [
@@ -297,6 +254,223 @@ app.post('/addVehicle', (req, res) => {
 
     })
 })
+
+
+// fuelPurchase
+app.post('/fuelPurchase', (req, res) => {
+    const insertSql = "INSERT INTO dieselpurchase (`date`, `PumpName`, `PumpAddress`, `Remark`, `Rate`, `Quantity`, `Total`, `uid`) VALUES (?)";
+    const updateSql = "UPDATE stockdiesel SET stock = stock + ? WHERE idstockDiesel = ?";
+    const paymentSql = "INSERT INTO payments (`uid`, `amount`, `from`, `to`, `subject`, `type`) VALUES (?)";
+    const values = [
+        req.body.date,
+        req.body.PumpName,
+        req.body.PumpAddress,
+        req.body.Remark,
+        req.body.Rate,
+        req.body.Quantity,
+        req.body.Total,
+        req.body.uid,
+    ];
+    const paymentValues = [
+        req.body.uid,
+        req.body.Total,
+        req.body.from,
+        req.body.to,
+        req.body.subject,
+        req.body.type,
+    ];
+    const quantity = req.body.Quantity;
+    const idStockDiesel = 1; // Replace with the appropriate value for your use case
+
+    db.beginTransaction((err) => {
+        if (err) {
+            return res.json('error ' + err);
+        }
+
+        db.query(insertSql, [values], (err, insertResult) => {
+            if (err) {
+                db.rollback(() => {
+                    return res.json('error ' + err);
+                });
+            }
+
+            db.query(updateSql, [quantity, idStockDiesel], (err, updateResult) => {
+                if (err) {
+                    db.rollback(() => {
+                        return res.json('error ' + err);
+                    });
+                }
+
+                db.query(paymentSql, [paymentValues], (err, paymentResult) => {
+                    if (err) {
+                        db.rollback(() => {
+                            return res.json('error ' + err);
+                        });
+                    }
+
+                    db.commit((err) => {
+                        if (err) {
+                            db.rollback(() => {
+                                return res.json('error ' + err);
+                            });
+                        }
+
+                        return res.json('Fuel purchase successfully recorded');
+                    });
+                });
+            });
+        });
+    });
+});
+
+// add Vehicle
+app.post('/addDriverSalary', (req, res) => {
+    const sql = "Insert into driverssalary (`uid`,`DriverName`,`PayDay`,`Month`,`AmountToPay`,`TotalHours`) values (?)";
+    const paymentSql = "Insert into payments (`uid`,`amount`,`from`,`to`,`subject`,`type`) values (?)";
+    const values = [
+        req.body.uid,
+        req.body.DriverName,
+        req.body.PayDay,
+        req.body.Month,
+        req.body.AmountToPay,
+        req.body.TotalHours,
+    ]
+    console.log(values)
+    // console.log(req.body)
+    db.query(sql, [values], (err, data) => {
+        if (err) {
+            return res.json('error ' + err)
+        }
+        const paymentValues = [
+            req.body.uid,
+            req.body.AmountToPay,
+            req.body.from,
+            req.body.to,
+            req.body.subject,
+            req.body.type,
+        ]
+        db.query(paymentSql, [paymentValues], (err, data) => {
+                if (err) {
+                    return res.json('error ' + err)
+                }
+                return res.json('Data added sucessfully')
+
+            }
+        )
+        return res.json(data)
+
+    })
+})
+
+
+// delete
+
+
+//drivers
+app.delete('/deleteDriver/:id', (req, res) => {
+    const sql = 'delete from drivers where iddrivers =?'
+    const id = req.params.id
+    console.log(id)
+
+    db.query(sql, [id], (err) => {
+        if (err) {
+            // console.log('err')
+            // console.log(err)
+            return res.json(err)
+        } else {
+            // console.log('data')
+            // console.log(data)
+            return res.json('driver deleted successfully')
+        }
+    })
+})
+
+//vehicles
+app.delete('/deleteVehicles/:id', (req, res) => {
+    const sql = 'delete from vehicles where idvehicles =?'
+    const id = req.params.id
+    console.log(id)
+
+    db.query(sql, [id], (err) => {
+        if (err) {
+            // console.log('err')
+            // console.log(err)
+            return res.json(err)
+        } else {
+            // console.log('data')
+            // console.log(data)
+            return res.json('vehicles deleted successfully')
+        }
+    })
+})
+
+// delete workdone
+app.delete('/deleteWorkDone/:id', (req, res) => {
+    const sql = 'delete from workdone where idworkdone =?'
+    const id = req.params.id
+    console.log(id)
+
+    db.query(sql, [id], (err) => {
+        if (err) {
+            // console.log('err')
+            // console.log(err)
+            return res.json(err)
+        } else {
+            // console.log('data')
+            // console.log(data)
+            return res.json('work done deleted successfully')
+        }
+    })
+})
+
+// deleteFuelPurchase
+app.post('/deleteFuelPurchase/:iddieselPurchase', (req, res) => {
+    const iddieselPurchase = req.params.iddieselPurchase;
+    const updateStockSql = "UPDATE stockdiesel SET stock = stock - (SELECT Quantity FROM dieselpurchase WHERE iddieselPurchase = ?) WHERE idstockDiesel = ?";
+    const deletePaymentsSql = "DELETE FROM payments WHERE uid = (SELECT uid FROM dieselpurchase WHERE iddieselPurchase = ?)";
+    const deleteDieselPurchaseSql = "DELETE FROM dieselpurchase WHERE iddieselPurchase = ?";
+
+    db.beginTransaction((err) => {
+        if (err) {
+            return res.json('error ' + err);
+        }
+
+        db.query(updateStockSql, [iddieselPurchase, stockDieselId], (err, updateResult) => {
+            if (err) {
+                db.rollback(() => {
+                    return res.json('error ' + err);
+                });
+            }
+
+            db.query(deletePaymentsSql, [iddieselPurchase], (err, deletePaymentsResult) => {
+                if (err) {
+                    db.rollback(() => {
+                        return res.json('error ' + err);
+                    });
+                }
+
+                db.query(deleteDieselPurchaseSql, [iddieselPurchase], (err, deleteDieselPurchaseResult) => {
+                    if (err) {
+                        db.rollback(() => {
+                            return res.json('error ' + err);
+                        });
+                    }
+
+                    db.commit((err) => {
+                        if (err) {
+                            db.rollback(() => {
+                                return res.json('error ' + err);
+                            });
+                        }
+
+                        return res.json('Fuel purchase and related data successfully deleted');
+                    });
+                });
+            });
+        });
+    });
+});
+
 
 app.listen(8081, () => {
     console.log('listening on 8081');
