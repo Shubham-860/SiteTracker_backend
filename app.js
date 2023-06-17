@@ -260,7 +260,7 @@ app.post('/addVehicle', (req, res) => {
 app.post('/fuelPurchase', (req, res) => {
     const insertSql = "INSERT INTO dieselpurchase (`date`, `PumpName`, `PumpAddress`, `Remark`, `Rate`, `Quantity`, `Total`, `uid`) VALUES (?)";
     const updateSql = "UPDATE stockdiesel SET stock = stock + ? WHERE idstockDiesel = ?";
-    const paymentSql = "INSERT INTO payments (`uid`, `amount`, `from`, `to`, `subject`, `type`) VALUES (?)";
+    const paymentSql = "INSERT INTO payments (`uid`, `amount`, `from`, `to`, `subject`, `type`, `date`) VALUES (?)";
     const values = [
         req.body.date,
         req.body.PumpName,
@@ -278,6 +278,7 @@ app.post('/fuelPurchase', (req, res) => {
         req.body.to,
         req.body.subject,
         req.body.type,
+        req.body.date,
     ];
     const quantity = req.body.Quantity;
     const idStockDiesel = 1; // Replace with the appropriate value for your use case
@@ -326,7 +327,7 @@ app.post('/fuelPurchase', (req, res) => {
 // add Vehicle
 app.post('/addDriverSalary', (req, res) => {
     const sql = "Insert into driverssalary (`uid`,`DriverName`,`PayDay`,`Month`,`AmountToPay`,`TotalHours`) values (?)";
-    const paymentSql = "Insert into payments (`uid`,`amount`,`from`,`to`,`subject`,`type`) values (?)";
+    const paymentSql = "Insert into payments (`uid`,`amount`,`from`,`to`,`subject`,`type`,`date`) values (?)";
     const values = [
         req.body.uid,
         req.body.DriverName,
@@ -348,6 +349,7 @@ app.post('/addDriverSalary', (req, res) => {
             req.body.to,
             req.body.subject,
             req.body.type,
+            req.body. PayDay,
         ]
         db.query(paymentSql, [paymentValues], (err, data) => {
                 if (err) {
@@ -361,6 +363,83 @@ app.post('/addDriverSalary', (req, res) => {
 
     })
 })
+
+
+// site payment
+
+app.post('/sitePayment', (req, res) => {
+    const sitePaymentSql = "INSERT INTO sitepayment (`SiteName`, `FixedAmount`, `PayingAmount`, `Date`, `uid`) VALUES ?";
+    const paymentSql = "INSERT INTO payments (`uid`, `amount`, `from`, `to`, `subject`, `type`, `date`) VALUES (?)";
+    const updateSiteSql = "UPDATE site SET PaidAmount = PaidAmount + ? WHERE SiteName = ?";
+
+    const sitePaymentValues = [
+        [
+            req.body.SiteName,
+            req.body.FixedAmount,
+            req.body.PayingAmount,
+            req.body.Date,
+            req.body.uid,
+        ],
+    ];
+
+    console.log(sitePaymentValues);
+
+    db.beginTransaction((err) => {
+        if (err) {
+            return res.json('error ' + err);
+        }
+
+        db.query(sitePaymentSql, [sitePaymentValues], (err, sitePaymentResult) => {
+            if (err) {
+                db.rollback(() => {
+                    return res.json('error ' + err);
+                });
+            }
+
+            const paymentValues = [
+                req.body.uid,
+                req.body.PayingAmount,
+                req.body.from,
+                req.body.to,
+                req.body.subject,
+                req.body.type,
+                req.body.Date,
+            ];
+
+            db.query(paymentSql, [paymentValues], (err, paymentResult) => {
+                if (err) {
+                    db.rollback(() => {
+                        return res.json('error ' + err);
+                    });
+                }
+                // return res.json('working');
+                const updateSiteValues = [
+                    req.body.PaidAmount,
+                    req.body.SiteName,
+                ];
+                console.log('updateSiteValues')
+                console.log(updateSiteValues)
+                db.query(updateSiteSql, updateSiteValues, (err, updateSiteResult) => {
+                    if (err) {
+                        db.rollback(() => {
+                            return res.json('error ' + err);
+                        });
+                    }
+
+                    db.commit((err) => {
+                        if (err) {
+                            db.rollback(() => {
+                                return res.json('error ' + err);
+                            });
+                        }
+
+                        return res.json('Data added successfully');
+                    });
+                });
+            });
+        });
+    });
+});
 
 
 // delete
