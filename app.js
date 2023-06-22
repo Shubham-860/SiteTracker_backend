@@ -64,7 +64,7 @@ app.get('/getVehicles', (req, res) => {
         if (err) {
             return res.json("error 1 " + err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
@@ -87,7 +87,7 @@ app.get('/getSite', (req, res) => {
         if (err) {
             return res.json("error 1 " + err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
@@ -99,7 +99,7 @@ app.get('/getWorkDone', (req, res) => {
         if (err) {
             return res.json(err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
@@ -111,7 +111,7 @@ app.get('/getDriversSalary', (req, res) => {
         if (err) {
             return res.json(err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
@@ -123,7 +123,7 @@ app.get('/getDieselPurchase', (req, res) => {
         if (err) {
             return res.json(err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
@@ -136,11 +136,10 @@ app.get('/getSitePayment', (req, res) => {
         if (err) {
             return res.json(err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
-
 
 
 // get all payments
@@ -150,16 +149,31 @@ app.get('/getAllPayment', (req, res) => {
         if (err) {
             return res.json(err)
         }
-        console.log(data)
+        // console.log(data)
         return res.json(data)
     })
 })
 
 
-
-
-
 // Write data
+
+// add user
+app.post('/addUser', (req, res) => {
+    const sql = "Insert into user (`email`,`password`,`superuser`) values (?)";
+    const values = [
+        req.body.email,
+        req.body.password,
+        req.body.superuser,
+    ]
+    // console.log(values)
+    // console.log(req.body)
+    db.query(sql, [values], (err, data) => {
+        if (err) {
+            return res.json('error ' + err)
+        }
+        return res.json(data)
+    })
+})
 
 // add Site
 app.post('/addSite', (req, res) => {
@@ -174,7 +188,7 @@ app.post('/addSite', (req, res) => {
         req.body.FixedAmount,
         req.body.PaidAmount,
     ]
-    console.log(values)
+    // console.log(values)
     // console.log(req.body)
     db.query(sql, [values], (err, data) => {
         if (err) {
@@ -284,7 +298,6 @@ app.post('/addVehicle', (req, res) => {
     })
 })
 
-
 // fuelPurchase
 app.post('/fuelPurchase', (req, res) => {
     const insertSql = "INSERT INTO dieselpurchase (`date`, `PumpName`, `PumpAddress`, `Remark`, `Rate`, `Quantity`, `Total`, `uid`) VALUES (?)";
@@ -317,21 +330,21 @@ app.post('/fuelPurchase', (req, res) => {
             return res.json('error ' + err);
         }
 
-        db.query(insertSql, [values], (err, insertResult) => {
+        db.query(insertSql, [values], (err) => {
             if (err) {
                 db.rollback(() => {
                     return res.json('error ' + err);
                 });
             }
 
-            db.query(updateSql, [quantity, idStockDiesel], (err, updateResult) => {
+            db.query(updateSql, [quantity, idStockDiesel], (err) => {
                 if (err) {
                     db.rollback(() => {
                         return res.json('error ' + err);
                     });
                 }
 
-                db.query(paymentSql, [paymentValues], (err, paymentResult) => {
+                db.query(paymentSql, [paymentValues], (err) => {
                     if (err) {
                         db.rollback(() => {
                             return res.json('error ' + err);
@@ -378,9 +391,9 @@ app.post('/addDriverSalary', (req, res) => {
             req.body.to,
             req.body.subject,
             req.body.type,
-            req.body. PayDay,
+            req.body.PayDay,
         ]
-        db.query(paymentSql, [paymentValues], (err, data) => {
+        db.query(paymentSql, [paymentValues], (err) => {
                 if (err) {
                     return res.json('error ' + err)
                 }
@@ -395,21 +408,11 @@ app.post('/addDriverSalary', (req, res) => {
 
 
 // site payment
-
 app.post('/sitePayment', (req, res) => {
     const sitePaymentSql = "INSERT INTO sitepayment (`SiteName`, `FixedAmount`, `PayingAmount`, `Date`, `uid`) VALUES ?";
     const paymentSql = "INSERT INTO payments (`uid`, `amount`, `from`, `to`, `subject`, `type`, `date`) VALUES (?)";
     const updateSiteSql = "UPDATE site SET PaidAmount = PaidAmount + ? WHERE SiteName = ?";
-
-    const sitePaymentValues = [
-        [
-            req.body.SiteName,
-            req.body.FixedAmount,
-            req.body.PayingAmount,
-            req.body.Date,
-            req.body.uid,
-        ],
-    ];
+    const sitePaymentValues = [[req.body.SiteName, req.body.FixedAmount, req.body.PayingAmount, req.body.Date, req.body.uid,],];
 
     console.log(sitePaymentValues);
 
@@ -418,37 +421,26 @@ app.post('/sitePayment', (req, res) => {
             return res.json('error ' + err);
         }
 
-        db.query(sitePaymentSql, [sitePaymentValues], (err, sitePaymentResult) => {
+        db.query(sitePaymentSql, [sitePaymentValues], (err) => {
             if (err) {
                 db.rollback(() => {
                     return res.json('error ' + err);
                 });
             }
 
-            const paymentValues = [
-                req.body.uid,
-                req.body.PayingAmount,
-                req.body.from,
-                req.body.to,
-                req.body.subject,
-                req.body.type,
-                req.body.Date,
-            ];
+            const paymentValues = [req.body.uid, req.body.PayingAmount, req.body.from, req.body.to, req.body.subject, req.body.type, req.body.Date,];
 
-            db.query(paymentSql, [paymentValues], (err, paymentResult) => {
+            db.query(paymentSql, [paymentValues], (err) => {
                 if (err) {
                     db.rollback(() => {
                         return res.json('error ' + err);
                     });
                 }
                 // return res.json('working');
-                const updateSiteValues = [
-                    req.body.PaidAmount,
-                    req.body.SiteName,
-                ];
+                const updateSiteValues = [req.body.PayingAmount, req.body.SiteName,];
                 console.log('updateSiteValues')
                 console.log(updateSiteValues)
-                db.query(updateSiteSql, updateSiteValues, (err, updateSiteResult) => {
+                db.query(updateSiteSql, updateSiteValues, (err) => {
                     if (err) {
                         db.rollback(() => {
                             return res.json('error ' + err);
@@ -474,6 +466,42 @@ app.post('/sitePayment', (req, res) => {
 // delete
 
 
+//site
+app.delete('/deleteSite/:id', (req, res) => {
+    const sql = 'delete from site where siteid =?'
+    const id = req.params.id
+    console.log(id)
+
+    db.query(sql, [id], (err) => {
+        if (err) {
+            // console.log('err')
+            // console.log(err)
+            return res.json(err)
+        } else {
+            // console.log('data')
+            // console.log(data)
+            return res.json('Site deleted successfully')
+        }
+    })
+})
+//Users
+app.delete('/deleteUser/:id', (req, res) => {
+    const sql = 'delete from user where userid =?'
+    const id = req.params.id
+    console.log(id)
+
+    db.query(sql, [id], (err) => {
+        if (err) {
+            // console.log('err')
+            // console.log(err)
+            return res.json(err)
+        } else {
+            // console.log('data')
+            // console.log(data)
+            return res.json('User deleted successfully')
+        }
+    })
+})
 //drivers
 app.delete('/deleteDriver/:id', (req, res) => {
     const sql = 'delete from drivers where iddrivers =?'
@@ -532,105 +560,168 @@ app.delete('/deleteWorkDone/:id', (req, res) => {
 })
 
 // deleteFuelPurchase
-app.post('/deleteFuelPurchase/:iddieselPurchase', (req, res) => {
+app.delete('/deleteFuelPurchase/:iddieselPurchase', (req, res) => {
     const iddieselPurchase = req.params.iddieselPurchase;
     const updateStockSql = "UPDATE stockdiesel SET stock = stock - (SELECT Quantity FROM dieselpurchase WHERE iddieselPurchase = ?) WHERE idstockDiesel = ?";
     const deletePaymentsSql = "DELETE FROM payments WHERE uid = (SELECT uid FROM dieselpurchase WHERE iddieselPurchase = ?)";
     const deleteDieselPurchaseSql = "DELETE FROM dieselpurchase WHERE iddieselPurchase = ?";
 
-    db.beginTransaction((err) => {
-        if (err) {
-            return res.json('error ' + err);
-        }
-
-        db.query(updateStockSql, [iddieselPurchase, stockDieselId], (err, updateResult) => {
+    try {
+        db.beginTransaction((err) => {
             if (err) {
-                db.rollback(() => {
-                    return res.json('error ' + err);
-                });
+                console.log(err);
+                return res.json('error ' + err);
             }
 
-            db.query(deletePaymentsSql, [iddieselPurchase], (err, deletePaymentsResult) => {
+            db.query(updateStockSql, [iddieselPurchase, 1], (err) => {
                 if (err) {
                     db.rollback(() => {
+                        console.log(err);
                         return res.json('error ' + err);
                     });
                 }
 
-                db.query(deleteDieselPurchaseSql, [iddieselPurchase], (err, deleteDieselPurchaseResult) => {
+                db.query(deletePaymentsSql, [iddieselPurchase], (err) => {
                     if (err) {
                         db.rollback(() => {
+                            console.log(err);
                             return res.json('error ' + err);
                         });
                     }
 
-                    db.commit((err) => {
+                    db.query(deleteDieselPurchaseSql, [iddieselPurchase], (err) => {
                         if (err) {
                             db.rollback(() => {
+                                console.log(err);
                                 return res.json('error ' + err);
                             });
                         }
 
-                        return res.json('Fuel purchase and related data successfully deleted');
+                        db.commit((err) => {
+                            if (err) {
+                                db.rollback(() => {
+                                    console.log(err);
+                                    return res.json('error ' + err);
+                                });
+                            }
+
+                            return res.json('Fuel purchase and related data successfully deleted');
+                        });
                     });
                 });
             });
         });
-    });
+    } catch (e) {
+        console.log(e);
+    }
 });
 
+// deleteSiteOwnerPayment
+app.post('/deleteSiteOwnerPayment', (req, res) => {
 
-// deleteFuelPurchase
-app.post('/deleteSitePayment/:iddieselPurchase', (req, res) => {
-    const iddieselPurchase = req.params.iddieselPurchase;
-    const updateStockSql = "UPDATE stockdiesel SET stock = stock - (SELECT Quantity FROM dieselpurchase WHERE iddieselPurchase = ?) WHERE idstockDiesel = ?";
-    const deletePaymentsSql = "DELETE FROM payments WHERE uid = (SELECT uid FROM dieselpurchase WHERE iddieselPurchase = ?)";
-    const deleteDieselPurchaseSql = "DELETE FROM dieselpurchase WHERE iddieselPurchase = ?";
+    const updateStockSql = "UPDATE site SET PaidAmount = PaidAmount - ? WHERE SiteName = ?";
+    const deletePaymentsSql = "DELETE FROM payments WHERE uid =  ?";
+    const deleteDieselPurchaseSql = "DELETE FROM sitepayment WHERE uid = ?";
 
-    db.beginTransaction((err) => {
-        if (err) {
-            return res.json('error ' + err);
-        }
 
-        db.query(updateStockSql, [iddieselPurchase, stockDieselId], (err, updateResult) => {
+    const PayingAmount = req.body.PayingAmount;
+    const uid = req.body.uid;
+    const SiteName = req.body.SiteName;
+    // console.log(req.body.PayingAmount)
+    // console.log(req.body.uid)
+    // console.log(req.body.SiteName)
+    try {
+        db.beginTransaction((err) => {
             if (err) {
-                db.rollback(() => {
-                    return res.json('error ' + err);
-                });
+                console.log(err);
+                return res.json('error ' + err);
             }
 
-            db.query(deletePaymentsSql, [iddieselPurchase], (err, deletePaymentsResult) => {
+            db.query(updateStockSql, [PayingAmount, SiteName], (err) => {
                 if (err) {
                     db.rollback(() => {
+                        console.log(err);
                         return res.json('error ' + err);
                     });
                 }
 
-                db.query(deleteDieselPurchaseSql, [iddieselPurchase], (err, deleteDieselPurchaseResult) => {
+                db.query(deletePaymentsSql, [uid], (err) => {
                     if (err) {
                         db.rollback(() => {
+                            console.log(err);
                             return res.json('error ' + err);
                         });
                     }
 
-                    db.commit((err) => {
+                    db.query(deleteDieselPurchaseSql, [uid], (err) => {
                         if (err) {
                             db.rollback(() => {
+                                console.log(err);
                                 return res.json('error ' + err);
                             });
                         }
 
-                        return res.json('Fuel purchase and related data successfully deleted');
+                        db.commit((err) => {
+                            if (err) {
+                                db.rollback(() => {
+                                    console.log(err);
+                                    return res.json('error ' + err);
+                                });
+                            }
+                            console.log(('Site payment and related data successfully deleted'))
+                            return res.json('Site payment and related data successfully deleted');
+                        });
                     });
                 });
             });
         });
-    });
+    } catch (e) {
+        console.log(e);
+    }
 });
 
+//deleteSalary
+app.delete('/deleteSalary/:id', (req, res) => {
+        const sql = 'delete from driverssalary where uid =?'
+        const sql2 = 'delete from payments where uid =?'
+        const id = req.params.id
+        console.log(id)
 
+        db.query(sql, [id], (err) => {
+                if (err) {
+                    return res.json(err)
+                } else {
+                    db.query(sql2, [id], (err) => {
+                            if (err) {
+                                return res.json(err)
+                            }
+                            return res.json('Salary deleted successfully')
+                        }
+                    )
+                }
+            }
+        )
+    }
+)
 
+//user
+app.delete('/deleteUser/:id', (req, res) => {
+    const sql = 'delete from user where userid =?'
+    const id = req.params.id
+    console.log(id)
 
+    db.query(sql, [id], (err) => {
+        if (err) {
+            // console.log('err')
+            // console.log(err)
+            return res.json(err)
+        } else {
+            // console.log('data')
+            // console.log(data)
+            return res.json('User deleted successfully')
+        }
+    })
+})
 app.listen(8081, () => {
     console.log('listening on 8081');
 })
