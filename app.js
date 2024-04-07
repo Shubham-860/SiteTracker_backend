@@ -128,7 +128,6 @@ app.get('/getDieselPurchase', (req, res) => {
     })
 })
 
-
 // get site payment
 app.get('/getSitePayment', (req, res) => {
     const sql = "SELECT * FROM sitepayment";
