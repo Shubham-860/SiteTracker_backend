@@ -9,7 +9,7 @@ app.use(cors());
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "1234",
+    password: "8600",
     database: "land_development",
 })
 db.connect();
@@ -725,3 +725,6 @@ app.delete('/deleteUser/:id', (req, res) => {
 app.listen(8081, () => {
     console.log('listening on 8081');
 })
+
+
+module.exports = app;
